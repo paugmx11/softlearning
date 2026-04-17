@@ -1,24 +1,36 @@
 package com.example.softlearning.applicationcore.entity.client.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.example.softlearning.applicationcore.entity.order.model.Order;
 import com.example.softlearning.sharedkernel.model.exceptions.BuildException;
 import com.example.softlearning.sharedkernel.model.stakeholders.Person;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column; // Anotaciones de JPA
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 @Entity
 @Table(name = "clients")
 public class Client extends Person {
 
     protected String creditCard;
-    
-    @Column(unique = true) // El código suele ser único para cada cliente
+
+    @Column(unique = true)
     private String code;
-    
+
     protected Boolean premium;
 
-    // Constructor vacío para JPA
+    @JsonIgnore
+    @XmlTransient
+    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY)
+    private List<Order> orders = new ArrayList<>();
+
     protected Client() {
         super();
     }
@@ -38,7 +50,6 @@ public class Client extends Person {
         Client c = new Client();
         String errorMessage = "";
 
-        // Validaciones de negocio
         if (name == null || name.trim().isEmpty()) {
             errorMessage += "Name is required. ";
         }
@@ -65,7 +76,6 @@ public class Client extends Person {
             throw new BuildException("Client validation failed: " + errorMessage.trim());
         }
 
-        // Asignación de valores
         c.name = name.trim();
         c.id = id;
         c.birthday = birthday.trim();
@@ -78,8 +88,6 @@ public class Client extends Person {
 
         return c;
     }
-
-    // --- Getters y Setters ---
 
     public String getAddress() {
         return address;
@@ -107,5 +115,9 @@ public class Client extends Person {
 
     public void setPremium(Boolean premium) {
         this.premium = premium;
+    }
+
+    public List<Order> getOrders() {
+        return List.copyOf(orders);
     }
 }

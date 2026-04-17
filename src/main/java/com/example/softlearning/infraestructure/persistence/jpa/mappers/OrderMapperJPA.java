@@ -1,5 +1,6 @@
 package com.example.softlearning.infraestructure.persistence.jpa.mappers;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,6 +8,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.softlearning.applicationcore.entity.book.model.Book;
+import com.example.softlearning.applicationcore.entity.client.model.Client;
 import com.example.softlearning.applicationcore.entity.order.model.Order;
 import com.example.softlearning.applicationcore.entity.order.model.OrderDetail;
 import com.example.softlearning.applicationcore.entity.order.model.OrderStatus;
@@ -26,12 +29,12 @@ public class OrderMapperJPA {
         }
 
         try {
-            java.lang.reflect.Constructor<Order> constructor = Order.class.getDeclaredConstructor();
+            Constructor<Order> constructor = Order.class.getDeclaredConstructor();
             constructor.setAccessible(true);
             Order order = constructor.newInstance();
 
             setPrivateField(order, "id", dto.getId());
-            setPrivateField(order, "clientId", dto.getClientId());
+            setPrivateField(order, "client", createClientReference(dto.getClientId()));
             setPrivateField(order, "description", dto.getDescription());
             setPrivateField(order, "status", parseStatus(dto.getStatus()));
             setPrivateField(order, "orderDate", parseTimestamp(dto.getOrderDate()));
@@ -77,6 +80,7 @@ public class OrderMapperJPA {
     private static OrderDetailDTOJPA toDetailDTO(OrderDetail detail) {
         OrderDetailDTOJPA dto = new OrderDetailDTOJPA();
         dto.setId(detail.getId());
+        dto.setBookId(detail.getBook() != null ? detail.getBook().getId() : null);
         dto.setProductRef(detail.getProductRef());
         dto.setProductName(detail.getProductName());
         dto.setUnitPrice(detail.getUnitPrice());
@@ -110,12 +114,13 @@ public class OrderMapperJPA {
     }
 
     private static OrderDetail createDetail(OrderDetailDTOJPA dto, Order order) throws Exception {
-        java.lang.reflect.Constructor<OrderDetail> constructor = OrderDetail.class.getDeclaredConstructor();
+        Constructor<OrderDetail> constructor = OrderDetail.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         OrderDetail detail = constructor.newInstance();
 
         setPrivateField(detail, "id", dto.getId());
         setPrivateField(detail, "order", order);
+        setPrivateField(detail, "book", createBookReference(dto.getBookId()));
         setPrivateField(detail, "productRef", dto.getProductRef());
         setPrivateField(detail, "productName", dto.getProductName());
         setPrivateField(detail, "unitPrice", dto.getUnitPrice());
@@ -156,6 +161,28 @@ public class OrderMapperJPA {
 
     private static String formatTimestamp(LocalDateTime value) {
         return value.format(TIMESTAMP_FORMATTER);
+    }
+
+    private static Client createClientReference(Integer clientId) throws Exception {
+        if (clientId == null || clientId <= 0) {
+            return null;
+        }
+        Constructor<Client> constructor = Client.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Client client = constructor.newInstance();
+        setPrivateField(client, "id", clientId);
+        return client;
+    }
+
+    private static Book createBookReference(Integer bookId) throws Exception {
+        if (bookId == null || bookId <= 0) {
+            return null;
+        }
+        Constructor<Book> constructor = Book.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Book book = constructor.newInstance();
+        setPrivateField(book, "id", bookId);
+        return book;
     }
 
     private static void setPrivateField(Object object, String fieldName, Object value) throws Exception {

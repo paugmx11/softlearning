@@ -1,12 +1,24 @@
 package com.example.softlearning.applicationcore.entity.order.model;
 
+import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.softlearning.applicationcore.entity.book.model.Book;
+import com.example.softlearning.applicationcore.entity.client.model.Client;
 import com.example.softlearning.sharedkernel.model.exceptions.BuildException;
 
-import jakarta.persistence.*; // Importante para JPA
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "orders")
@@ -18,8 +30,9 @@ public class Order {
     @Id
     private int id;
 
-    @Column(name = "client_id")
-    private int clientId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id")
+    private Client client;
 
     private LocalDateTime orderDate;
     private LocalDateTime deliveryDate;
@@ -30,15 +43,13 @@ public class Order {
     private String description;
     private double totalAmount;
 
-    // Relación OneToMany: MappedBy indica que la FK está en OrderDetail
-    // Cascade ALL permite guardar la orden y sus detalles en un solo paso
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private final List<OrderDetail> details = new ArrayList<>();
-    
+
     private int detailCounter = 1;
 
-    // JPA requiere este constructor (aunque sea protected/private)
-    protected Order() { }
+    protected Order() {
+    }
 
     public static Order getInstance(int id,
                                     int clientId,
@@ -49,7 +60,7 @@ public class Order {
 
         Order order = new Order();
         order.id = id;
-        order.clientId = clientId;
+        order.client = createClientReference(clientId);
         order.orderDate = orderDate;
         order.description = description.trim();
         order.status = OrderStatus.CREATED;
@@ -59,6 +70,15 @@ public class Order {
     }
 
     public void addDetail(String productRef,
+                          String productName,
+                          double unitPrice,
+                          int amount,
+                          double discount) throws BuildException {
+        addDetail(null, productRef, productName, unitPrice, amount, discount);
+    }
+
+    public void addDetail(Book book,
+                          String productRef,
                           String productName,
                           double unitPrice,
                           int amount,
@@ -78,7 +98,8 @@ public class Order {
                     unitPrice,
                     amount,
                     discount,
-                    this // Le pasamos 'this' para establecer la relación bidireccional JPA
+                    this,
+                    book
             );
             details.add(detail);
             recalculateTotal();
@@ -176,9 +197,9 @@ public class Order {
         }
     }
 
-    // Getters 
     public int getId() { return id; }
-    public int getClientId() { return clientId; }
+    public int getClientId() { return client != null && client.getId() != null ? client.getId() : 0; }
+    public Client getClient() { return client; }
     public LocalDateTime getOrderDate() { return orderDate; }
     public LocalDateTime getDeliveryDate() { return deliveryDate; }
     public OrderStatus getStatus() { return status; }
@@ -188,8 +209,20 @@ public class Order {
 
     public String getOrderDetails() {
         return "Pedido #" + id +
-                " | Cliente: " + clientId +
+                " | Cliente: " + getClientId() +
                 " | Estado: " + status +
                 " | Total: " + totalAmount + " EUR";
+    }
+
+    private static Client createClientReference(int clientId) {
+        try {
+            Constructor<Client> constructor = Client.class.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            Client client = constructor.newInstance();
+            client.setId(clientId);
+            return client;
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo crear la referencia al cliente.", e);
+        }
     }
 }

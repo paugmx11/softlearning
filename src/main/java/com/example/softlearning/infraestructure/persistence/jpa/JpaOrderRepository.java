@@ -13,12 +13,12 @@ import jakarta.transaction.Transactional;
 
 @Repository
 public interface JpaOrderRepository extends JpaRepository<Order, Integer> {
-    public Optional<Order> findById(int id);
-    
-    public List<Order> findByClientId(int clientId);
-    
-    public List<Order> findByStatus(OrderStatus status);
-    
+    Optional<Order> findById(int id);
+
+    List<Order> findByClient_Id(int clientId);
+
+    List<Order> findByStatus(OrderStatus status);
+
     @Transactional
-    public void deleteById(int id);
+    void deleteById(int id);
 }

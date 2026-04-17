@@ -1,5 +1,6 @@
 package com.example.softlearning.applicationcore.entity.order.model;
 
+import com.example.softlearning.applicationcore.entity.book.model.Book;
 import com.example.softlearning.sharedkernel.model.exceptions.ValidationException;
 
 import jakarta.persistence.Entity;
@@ -19,10 +20,13 @@ public class OrderDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    // Relación Many-to-One necesaria para que JPA gestione la clave ajena
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "book_id")
+    private Book book;
 
     private String productRef;
     private String productName;
@@ -30,11 +34,11 @@ public class OrderDetail {
     private int amount;
     private double discount;
 
-    // Constructor vacío requerido por JPA
-    protected OrderDetail() { 
+    protected OrderDetail() {
         this.id = 0;
         this.productRef = null;
         this.productName = null;
+        this.book = null;
     }
 
     OrderDetail(int id,
@@ -43,10 +47,9 @@ public class OrderDetail {
                 double unitPrice,
                 int amount,
                 double discount) throws ValidationException {
-        this(id, productRef, productName, unitPrice, amount, discount, null);
+        this(id, productRef, productName, unitPrice, amount, discount, null, null);
     }
 
-    // Constructor modificado para incluir la referencia al padre (Order)
     OrderDetail(int id,
                 String productRef,
                 String productName,
@@ -54,7 +57,18 @@ public class OrderDetail {
                 int amount,
                 double discount,
                 Order order) throws ValidationException {
-        
+        this(id, productRef, productName, unitPrice, amount, discount, order, null);
+    }
+
+    OrderDetail(int id,
+                String productRef,
+                String productName,
+                double unitPrice,
+                int amount,
+                double discount,
+                Order order,
+                Book book) throws ValidationException {
+
         if (id <= 0) {
             throw new ValidationException("El identificador del detalle debe ser mayor que 0.");
         }
@@ -80,7 +94,8 @@ public class OrderDetail {
         this.unitPrice = unitPrice;
         this.amount = amount;
         this.discount = discount;
-        this.order = order; // Establece la relación con el padre
+        this.order = order;
+        this.book = book;
     }
 
     public double getSubtotal() {
@@ -89,7 +104,6 @@ public class OrderDetail {
         return Math.round((subtotal - discountAmount) * 100.0) / 100.0;
     }
 
-    // Getters
     public int getId() { return id; }
     public String getProductRef() { return productRef; }
     public String getProductName() { return productName; }
@@ -97,12 +111,13 @@ public class OrderDetail {
     public int getAmount() { return amount; }
     public double getDiscount() { return discount; }
     public Order getOrder() { return order; }
+    public Book getBook() { return book; }
 
-    // Setters
     public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
     public void setAmount(int amount) { this.amount = amount; }
     public void setDiscount(double discount) { this.discount = discount; }
     public void setOrder(Order order) { this.order = order; }
+    public void setBook(Book book) { this.book = book; }
 
     @Override
     public String toString() {
