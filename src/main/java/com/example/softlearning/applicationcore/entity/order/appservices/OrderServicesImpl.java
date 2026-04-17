@@ -13,6 +13,8 @@ import com.example.softlearning.sharedkernel.appservices.serializers.Serializers
 import com.example.softlearning.sharedkernel.appservices.serializers.SerializersCatalog;
 import com.example.softlearning.sharedkernel.model.exceptions.ServiceException;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class OrderServicesImpl implements OrderServices {
 
@@ -94,6 +96,7 @@ public class OrderServicesImpl implements OrderServices {
     }
 
     @Override
+    @Transactional
     public void deleteById(int id) throws ServiceException {
         Order order = this.getById(id);
         orderRepository.delete(order);
