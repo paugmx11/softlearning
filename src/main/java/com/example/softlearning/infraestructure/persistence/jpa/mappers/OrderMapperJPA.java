@@ -99,17 +99,13 @@ public class OrderMapperJPA {
         details.clear();
 
         if (detailDTOs == null || detailDTOs.isEmpty()) {
-            setPrivateField(order, "detailCounter", 1);
             return;
         }
 
-        int maxDetailId = 0;
         for (OrderDetailDTOJPA detailDTO : detailDTOs) {
             OrderDetail detail = createDetail(detailDTO, order);
             details.add(detail);
-            maxDetailId = Math.max(maxDetailId, detail.getId());
         }
-        setPrivateField(order, "detailCounter", maxDetailId + 1);
         setPrivateField(order, "totalAmount", details.stream().mapToDouble(OrderDetail::getSubtotal).sum());
     }
 

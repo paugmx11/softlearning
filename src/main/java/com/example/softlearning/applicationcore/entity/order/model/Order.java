@@ -46,8 +46,6 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private final List<OrderDetail> details = new ArrayList<>();
 
-    private int detailCounter = 1;
-
     protected Order() {
     }
 
@@ -92,7 +90,6 @@ public class Order {
 
         try {
             OrderDetail detail = new OrderDetail(
-                    detailCounter++,
                     productRef,
                     productName,
                     unitPrice,

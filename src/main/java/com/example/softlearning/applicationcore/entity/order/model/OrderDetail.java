@@ -68,10 +68,39 @@ public class OrderDetail {
                 double discount,
                 Order order,
                 Book book) throws ValidationException {
+        this(productRef, productName, unitPrice, amount, discount, order, book);
 
         if (id <= 0) {
             throw new ValidationException("El identificador del detalle debe ser mayor que 0.");
         }
+
+        this.id = id;
+    }
+
+    OrderDetail(String productRef,
+                String productName,
+                double unitPrice,
+                int amount,
+                double discount) throws ValidationException {
+        this(productRef, productName, unitPrice, amount, discount, null, null);
+    }
+
+    OrderDetail(String productRef,
+                String productName,
+                double unitPrice,
+                int amount,
+                double discount,
+                Order order) throws ValidationException {
+        this(productRef, productName, unitPrice, amount, discount, order, null);
+    }
+
+    OrderDetail(String productRef,
+                String productName,
+                double unitPrice,
+                int amount,
+                double discount,
+                Order order,
+                Book book) throws ValidationException {
         if (productRef == null || productRef.trim().isEmpty()) {
             throw new ValidationException("La referencia del producto es obligatoria.");
         }
@@ -88,7 +117,6 @@ public class OrderDetail {
             throw new ValidationException("El descuento debe estar entre 0 y 100.");
         }
 
-        this.id = id;
         this.productRef = productRef.trim();
         this.productName = productName.trim();
         this.unitPrice = unitPrice;
